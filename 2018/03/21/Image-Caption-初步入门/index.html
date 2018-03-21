@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Image Caption," />
 
 
 
@@ -79,14 +79,18 @@
 
 
 
+<meta name="description" content="图像标注(Image Caption)是一个结合了CV和NLP两个领域的比较综合的任务，其对应的模型输入为一幅图像，输出为描述该图像的一段文字。通俗的讲，就是训练模型去识别图像中的物体，并且理解物体之间的联系，并用一句话来进行描述。 任务描述目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括COCO和Flickr8k，Flickr30k和SBU等。 Ima">
+<meta name="keywords" content="Image Caption">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Image Caption 综述">
-<meta property="og:url" content="http://yoursite.com/2018/03/21/Image-Caption-综述/index.html">
+<meta property="og:title" content="Image Caption 初步入门">
+<meta property="og:url" content="http://yoursite.com/2018/03/21/Image-Caption-初步入门/index.html">
 <meta property="og:site_name" content="盗泉">
+<meta property="og:description" content="图像标注(Image Caption)是一个结合了CV和NLP两个领域的比较综合的任务，其对应的模型输入为一幅图像，输出为描述该图像的一段文字。通俗的讲，就是训练模型去识别图像中的物体，并且理解物体之间的联系，并用一句话来进行描述。 任务描述目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括COCO和Flickr8k，Flickr30k和SBU等。 Ima">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-03-21T13:46:48.761Z">
+<meta property="og:updated_time" content="2018-03-21T14:13:18.084Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Image Caption 综述">
+<meta name="twitter:title" content="Image Caption 初步入门">
+<meta name="twitter:description" content="图像标注(Image Caption)是一个结合了CV和NLP两个领域的比较综合的任务，其对应的模型输入为一幅图像，输出为描述该图像的一段文字。通俗的讲，就是训练模型去识别图像中的物体，并且理解物体之间的联系，并用一句话来进行描述。 任务描述目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括COCO和Flickr8k，Flickr30k和SBU等。 Ima">
 
 
 
@@ -116,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/03/21/Image-Caption-综述/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/03/21/Image-Caption-初步入门/"/>
 
 
 
 
 
-  <title>Image Caption 综述 | 盗泉</title>
+  <title>Image Caption 初步入门 | 盗泉</title>
   
 
 
@@ -238,7 +242,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/21/Image-Caption-综述/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/21/Image-Caption-初步入门/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Pythonix Huang">
@@ -255,7 +259,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Image Caption 综述</h1>
+          <h1 class="post-title" itemprop="name headline">Image Caption 初步入门</h1>
         
 
         <div class="post-meta">
@@ -305,7 +309,10 @@
       
 
       
-        
+        <p>图像标注(Image Caption)是一个结合了CV和NLP两个领域的比较综合的任务，其对应的模型输入为一幅图像，输出为描述该图像的一段文字。通俗的讲，就是训练模型去识别图像中的物体，并且理解物体之间的联系，并用一句话来进行描述。</p>
+<h1 id="任务描述"><a href="#任务描述" class="headerlink" title="任务描述"></a>任务描述</h1><p>目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括<a href="http://cocodataset.org/" target="_blank" rel="noopener">COCO</a>和Flickr8k，Flickr30k和SBU等。</p>
+<p>Image Caption任务可以视为两个子任务——理解图片和生成描述。我们可以用下面的形式来描述该任务的训练过程：对于训练集的一张图片$I$，它对应的描述为序列</p>
+
       
     </div>
     
@@ -348,6 +355,12 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Image-Caption/" rel="tag"># Image Caption</a>
+          
+        </div>
       
 
       
@@ -402,8 +415,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -430,6 +452,15 @@
 
             
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
             
 
           </nav>
@@ -459,6 +490,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#任务描述"><span class="nav-number">1.</span> <span class="nav-text">任务描述</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
