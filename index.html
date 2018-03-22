@@ -327,12 +327,12 @@
 <p>我们需要翻译中文“我是中国人”—&gt;英文“I am Chinese”</p>
 <p>假设我们的词表大小只有三个单词就是I am Chinese。那么如果我们的beam size为2的话，我们现在来解释,</p>
 <p>如下图所示，我们在decoder的过程中，有了beam search方法后，在第一次的输出，我们选取概率最大的”I”和”am”两个单词，而不是只挑选一个概率最大的单词。</p>
-<p><img src="https://pic1.zhimg.com/v2-fd14a131ddc9ae0e3400c0c1d5615d1c_r.jpg" alt="BEAM-SEARCH"></p>
+<p><img src="https://ws1.sinaimg.cn/large/005E0CcXly1fplrt4zatrj313q0buabm.jpg" alt="BEAM-SEARCH"></p>
 <p>然后接下来我们要做的就是，把“I”单词作为下一个decoder的输入算一遍得到y2的输出概率分布，把“am”单词作为下一个decoder的输入算一遍也得到y2的输出概率分布。</p>
 <p>比如将“I”单词作为下一个decoder的输入算一遍得到y2的输出概率分布如下：</p>
-<p><img src="https://pic1.zhimg.com/80/v2-2c472c77c6097f894c45daffe9d83933_hd.jpg" alt="BEAM-SEARCH"></p>
+<p><img src="https://ws1.sinaimg.cn/large/005E0CcXly1fplrtl25r3j313o0c4myu.jpg" alt="BEAM-SEARCH"></p>
 <p>比如将“am”单词作为下一个decoder的输入算一遍得到y2的输出概率分布如下：</p>
-<p><img src="https://pic2.zhimg.com/v2-63c198430238fd55e31344bb61d053dc_r.jpg" alt="BEAM-SEARCH"></p>
+<p><img src="https://ws1.sinaimg.cn/large/005E0CcXly1fplrtv80z1j313m0c2myu.jpg" alt="BEAM-SEARCH"></p>
 <p>那么此时我们由于我们的beam size为2，也就是我们只能保留概率最大的两个序列，此时我们可以计算所有的序列概率：</p>
 <p>“I I” = 0.4*0.3 “I am” = 0.4*0.6 “I Chinese” = 0.4*0.1</p>
 <p>“am I” = 0.5*0.3 “am am” = 0.5*0.3 “am Chinese” = 0.5*0.4</p>
@@ -350,18 +350,18 @@
 <p>回过头来看上面那个例子，译文句子的 unigram 只有“the”，它在译文中出现了7次，故 Count(the)=7；在参考句子1中出现2次，参考句子2中出现1次，最大值为2，所以“the”的匹配次数为 $Count_{clip}(the)=min{7,2}=2$ ，因此precision为2/7。</p>
 <p>(3) 但是这样的计算方式仍然存在问题：比如模型生成的句子是“the cat is on”，那么从 n 不论取1、2、3还是4，得分都是1，满分。换言之，由于评价的是precision，所以会倾向于短句子，如果模型只翻译最有把握的片段，那么就可以得到高分，因此要<strong>对短句子进行惩罚</strong>。</p>
 <p>惩罚的方式就是在原先的评价指标值上乘一个惩罚因子（brevity penalty factor）：当模型给出的译文句子 c 的长度 $l_c$ 要比参考句子的长度 $l_s$ 长时，就不进行惩罚，即惩罚因子为1，比如说有三个参考句子的长度分别为12、15、17，模型给出的译文句子长度为12，那么就不进行惩罚，<strong>比较的是各参考句子长度里最接近的那个</strong>；否则就惩罚：</p>
-<p>$$<br>BP = \begin{cases}<br>1, &amp;l_C &gt; l_S \<br>exp(1-\frac{l_S}{l_C}), &amp;l_C \leq l_S<br>\end{cases}<br>$$</p>
+<p>$$<br>BP=\begin{cases}1, &amp; l_C&gt;l_S;\\exp(1-\dfrac{l_S}{l_C}), &amp; l_C\leq l_S\end{cases}<br>$$</p>
 <p>式中，$l_C$表示模型对给定测试集生成的全部句子长度综合，而$l_S$表示与模型生成句子长度最接近的参考句子的长度。</p>
 <p>综合起来，BLEU的评分公式采用的是对数加权平均值（这是因为当n增大时评分会指数级减小），再乘上惩罚因子：</p>
 <p>$$<br>BLEU@N=BP\cdot \exp(\sum_{n=1}^Nw_n\log p_n)<br>$$</p>
 <p>式中的 N 通常取4，权重 $w_n$ 通常取 $\frac{1}{N}$（几何平均）。最终评分在0到1之间，1表示完全与人工翻译一致。</p>
 <p>BLEU的优点是它考虑的粒度是 n-gram 而不是词，考虑了更长的匹配信息；BLEU的缺点是不管什么样的 n-gram 被匹配上了，都会被同等对待。比如说动词匹配上的重要性在大部分情况下应该是大于冠词的。</p>
 <p>(4) 在caption任务中，处理方式和机器翻译是一样的：多张图片就相当于翻译里的多个源语言句子。为了描述清楚还是给一下公式：</p>
-<p>对于测试集的一张图片 $I_i$ ，模型生成的caption记为 $c_i\in C$（ C 是全部 $c_i$ 构成的集合），且将任一 n-gram 记作 $ω<em>k$ ；人工给出的参考caption的集合为 $Si={s</em>{i1},s_{i2},…,s_{im}} \in S$（ S 是全部 Si 构成的集合），$s_{ij}$ 为句子，m 为参考caption的数量（数据集里的一张图片通常会有多个参考caption）。将某个 n-gram $ω_k$ 出现在句子 ci 中的次数记作 $h_k(c_i)$ ，类似地，可定义 $h_k(s_{ij})$ 。</p>
+<p>对于测试集的一张图片$I_i$，模型生成的caption记为$c_i \in C$（ C 是全部 $c_i$ 构成的集合），且将任一 n-gram 记作 $\omega_k$ ；人工给出的参考caption的集合为 $Si={s_{i1},s_{i2},…,s_{im}} \in S$（ S 是全部 Si 构成的集合），$s_{ij}$ 为句子，m 为参考caption的数量（数据集里的一张图片通常会有多个参考caption）。将某个 n-gram $\omega_k$ 出现在句子 ci 中的次数记作 $h_k(c_i)$ ，类似地，可定义 $h_k(s_{ij})$ 。</p>
 <p>在整个测试集上，precision值为</p>
 <p>$$<br>p_n(C,S)=\frac{\displaystyle\sum_i\sum_k\min{h_k(c_i),\max_{j\leq m}h_k(s_{ij})}}{\displaystyle\sum_i\sum_kh_k(c_i)}<br>$$</p>
 <p>类似的，惩罚因子的值为</p>
-<p>$$<br>BP(C,S) = \begin{cases}<br>1, &amp;l_C &gt; l_S \<br>exp(1-\frac{l_S}{l_C}), &amp;l_C \leq l_S<br>\end{cases}<br>$$</p>
+<p>$$<br>BP(C,S)=\begin{cases}1, &amp; l_C&gt;l_S;\\exp(1-\dfrac{l_S}{l_C}), &amp; l_C\leq l_S\end{cases}<br>$$</p>
 <p>所以BLEU@N的值为</p>
 <p>$$<br>BLEU@N(C,S)=BP(C,S)\cdot \exp(\sum_{n=1}^Nw_n\log p_n(C,S))<br>$$</p>
 <h2 id="2-2-ROUGE"><a href="#2-2-ROUGE" class="headerlink" title="2.2 ROUGE"></a>2.2 ROUGE</h2><p>ROUGE主要用于自动摘要评价，是基于召回率计算的，这里参考了<a href="http://blog.csdn.net/lime1991/article/details/42521029" target="_blank" rel="noopener">这篇blog</a>。下面转载一下贴图。</p>
@@ -381,9 +381,9 @@
 <p>$$<br>Meteor=(1-Penalty)\cdot F<br>$$</p>
 <p>用于机器翻译评测时，通常取 α=3 、γ=0.5 和 θ=3。</p>
 <h2 id="2-4-CIDEr-Consensus-based-Image-Description-Evaluation"><a href="#2-4-CIDEr-Consensus-based-Image-Description-Evaluation" class="headerlink" title="2.4 CIDEr (Consensus-based Image Description Evaluation)"></a>2.4 CIDEr (Consensus-based Image Description Evaluation)</h2><p>这个指标将<strong>每个句子都看作“文档”</strong>，将其表示成 <strong>tf-idf 向量</strong>的形式，然后计算参考caption与模型生成的caption的<strong>余弦相似度</strong>，作为打分。换句话讲，就是向量空间模型。考虑一张图片 $I_i \in I$（ I 是全部测试集图片的集合）。</p>
-<p>对于一个 n-gram $ω<em>k$ 和参考caption $s</em>{ij}$ ，tf-idf 计算方式为：</p>
+<p>对于一个 n-gram $\omega_k$ 和参考caption $s_{ij}$ ，tf-idf 计算方式为：</p>
 <p>$$<br>g_k(s_{ij})=\frac{h_k(s_{ij})}{\displaystyle\sum_{\omega_l\in\Omega} h_l(s_{ij})}\log\biggl(\frac{|I|}{\displaystyle\sum_{I_p\in I}\min{1,\sum_qh_k(s_{pq})}}\biggr)<br>$$</p>
-<p>式中的 Ω 是全部 n-gram 构成的词表。可以看出 idf 的分母部分代表的是 $ω_k$ 出现于参考caption的图片个数。</p>
+<p>式中的 Ω 是全部 n-gram 构成的词表。可以看出 idf 的分母部分代表的是 $\omega_k$ 出现于参考caption的图片个数。</p>
 <p>那么，CIDEr的值可以用余弦相似度的平均值来计算：</p>
 <p>$$<br>CIDEr_n(c_i,S_i)=\frac1m\sum_j\frac{\boldsymbol{g^n}(c_i)^{\top}\boldsymbol{g^n}(s_{ij})}{||\boldsymbol{g^n}(c_i)||\cdot ||\boldsymbol{g^n}(s_{ij})||}<br>$$</p>
 <p>类似于BLEU的做法：</p>
