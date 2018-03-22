@@ -310,8 +310,87 @@
         
           
             <p>图像标注(Image Caption)是一个结合了CV和NLP两个领域的比较综合的任务，其对应的模型输入为一幅图像，输出为描述该图像的一段文字。通俗的讲，就是训练模型去识别图像中的物体，并且理解物体之间的联系，并用一句话来进行描述。</p>
-<h1 id="任务描述"><a href="#任务描述" class="headerlink" title="任务描述"></a>任务描述</h1><p>目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括<a href="http://cocodataset.org/" target="_blank" rel="noopener">COCO</a>和Flickr8k，Flickr30k和SBU等。</p>
-<p>Image Caption任务可以视为两个子任务——理解图片和生成描述。我们可以用下面的形式来描述该任务的训练过程：对于训练集的一张图片$I$，它对应的描述为序列</p>
+<h1 id="1-任务描述"><a href="#1-任务描述" class="headerlink" title="1 任务描述"></a>1 任务描述</h1><p>目前大部分Image Caption的任务还是基于英文，因为大部分数据集都是英文的格式，包括<a href="http://cocodataset.org/" target="_blank" rel="noopener">COCO</a>和Flicr8k，Flickr30k和SBU等。</p>
+<p>Image Caption任务可以视为两个子任务——理解图片和生成描述。我们可以用下面的形式来描述该任务的训练过程：设对于训练集的一张图片$I$，它对应的描述为序列$S = {S_1,S_2,…}$($S_i$代表句子里的词)。而对于模型$\theta$，给定输入图片$I$，它生成序列$S$的概率为</p>
+<p>$$<br>P(S|I;\theta) = \prod_{i=0}^N P(S_i|S_1,S_2,…,S_{t-1},I;\theta)<br>$$</p>
+<p>由上式易知，该模型的本质就是对$P(S_i|S_1,S_2,…,S_{t-1},I;\theta)$进行建模，传统算法有马尔科夫，而在神经网络中可以用RNN来进行建模，因为理论上RNN是可以保留全部上下文信息的(长时依赖可以用LSTM解决)，相对于CNN和n-gram只能取某个窗口，RNN简直是这类模型的天之骄子。</p>
+<p>然后将上面的式子取对数，可以得到对数似然函数：</p>
+<p>$$<br>log(P(S|I;\theta)) = \sum_{i=0}^N log(P(S_i|S_1,S_2,…,S_{t-1},I;\theta))<br>$$</p>
+<p>模型的训练目标就是将全部训练样本的对数似然函数之和最大化，即：</p>
+<p>$$<br>\theta^* = argmax_{\theta} \sum_{I,S} log(P(S|I;\theta))<br>$$</p>
+<p>其中I，S为全部的训练样本。</p>
+<p>训练完毕后，模型进行生成时，则是根据输入的图片推断概率最高的序列：</p>
+<p>$$<br>argmax_S P(S|I;\theta^*)<br>$$</p>
+<p>每个词生成时，如果把词表中的词全部计算一边会非常耗时，搜索规模也随着句子的长度指数级增长。可以使用Beam Search 来减少搜索空间。</p>
+<p>这里科普一下Beam Search，参考<a href="https://zhuanlan.zhihu.com/p/28048246" target="_blank" rel="noopener">知乎专栏</a>：<br>在sequence2sequence模型中，beam search的方法只用在测试的情况，因为在训练过程中，每一个decoder的输出是有正确答案的，也就不需要beam search去加大输出的准确率。</p>
+<p>假设现在我们用机器翻译作为例子来说明，</p>
+<p>我们需要翻译中文“我是中国人”—&gt;英文“I am Chinese”</p>
+<p>假设我们的词表大小只有三个单词就是I am Chinese。那么如果我们的beam size为2的话，我们现在来解释,</p>
+<p>如下图所示，我们在decoder的过程中，有了beam search方法后，在第一次的输出，我们选取概率最大的”I”和”am”两个单词，而不是只挑选一个概率最大的单词。</p>
+<p><img src="https://pic1.zhimg.com/v2-fd14a131ddc9ae0e3400c0c1d5615d1c_r.jpg" alt="BEAM-SEARCH"></p>
+<p>然后接下来我们要做的就是，把“I”单词作为下一个decoder的输入算一遍得到y2的输出概率分布，把“am”单词作为下一个decoder的输入算一遍也得到y2的输出概率分布。</p>
+<p>比如将“I”单词作为下一个decoder的输入算一遍得到y2的输出概率分布如下：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-2c472c77c6097f894c45daffe9d83933_hd.jpg" alt="BEAM-SEARCH"></p>
+<p>比如将“am”单词作为下一个decoder的输入算一遍得到y2的输出概率分布如下：</p>
+<p><img src="https://pic2.zhimg.com/v2-63c198430238fd55e31344bb61d053dc_r.jpg" alt="BEAM-SEARCH"></p>
+<p>那么此时我们由于我们的beam size为2，也就是我们只能保留概率最大的两个序列，此时我们可以计算所有的序列概率：</p>
+<p>“I I” = 0.4*0.3 “I am” = 0.4*0.6 “I Chinese” = 0.4*0.1</p>
+<p>“am I” = 0.5*0.3 “am am” = 0.5*0.3 “am Chinese” = 0.5*0.4</p>
+<p>我们很容易得出俩个最大概率的序列为 “I am”和“am Chinese”，然后后面会不断重复这个过程，直到遇到结束符为止。</p>
+<p>最终输出2个得分最高的序列。</p>
+<h1 id="2-评价指标"><a href="#2-评价指标" class="headerlink" title="2 评价指标"></a>2 评价指标</h1><p>常用的指标有BLEU、Meteor、ROUGE、CIDEr和SPICE。前两个是评测机器翻译的，第三个是评测自动摘要的，最后两个应该是为caption定制的。</p>
+<p>对于英文来说，模型生成的caption和人工给出的参考caption都经过了预处理：词条化（tokenization），去除标点。一般来说，评价生成的序列与参考序列的差异时，都是基于 n-gram 的，进而考察局部性质而非只考察单个词。</p>
+<h2 id="2-1-BLUE-BiLingual-Evaluation-Understudy"><a href="#2-1-BLUE-BiLingual-Evaluation-Understudy" class="headerlink" title="2.1 BLUE (BiLingual Evaluation Understudy)"></a>2.1 BLUE (BiLingual Evaluation Understudy)</h2><p>BLEU是事实上的机器翻译评测标准，n 常取1到4，是基于准确率（precision）的评测。首先看一下它在机器翻译里是怎么做的。以下内容参考自统计自然语言处理：</p>
+<p>需要明确，在机器翻译中，翻译的评测是<strong>以句子为单位的</strong>。</p>
+<p>(1) 首先来看一个最简单的思路：对于一个源语言句子，计算模型生成的译文中的 n-gram 的个数，然后再计算这些 n-gram 中有多少是同时出现在了参考译文（不止一句）中，从而计算出一个百分比来作为 precision 。</p>
+<p>但这样的做法存在一些问题：比如说参考句子1是“the cat is on the mat”，参考句子2是“there is a cat on the mat”，而模型生成的句子是“the the the the the the the”，那么按照上述定义，考察 n=1 的情况，也就是unigram，模型生成的句子包含7个 unigram ，这7个 unigram 全部出现在了参考句子集合中，所以将得到 7/7 这样的满分，但是这样的译文显然没有意义。为了获得较高的指标，模型完全可以在任何位置都去生成一个“百搭”的词，使得分子随着分母的增长而增长。</p>
+<p>(2) 为了解决<strong>“百搭”词</strong>的问题，需要修正 precision 的计算方式。考虑模型生成的句子 c 的全部 n-gram ，考察其中的任一 n-gram ：首先计算其在 c 中出现的次数 $Count(n-gram)$ ；然后统计其在各参考句子中分别出现的次数的最大值，将该值与 $Count(n-gram)$ 的较小者记作该 n-gram 的匹配次数 $Count_{clip}(n-gram)$ 。之后，再把每个 n-gram 的计算结果累加起来，得到句子的结果。所以precision可以用如下方式计算：</p>
+<p>$$<br>p_n = \frac<br>{\sum_{c \in {Candidates} } \sum_{n-gram \in c}Count_{clip}(n-gram)}<br>{\sum_{c \in {Candidates} } \sum_{n-gram \in c}Count(n-gram)}<br>$$</p>
+<p>其中{Candidates}表示需要评测的全部句子，当n=1时，即unigram时，$\sum_{n-gram \in c}Count(n-gram)$就是句子的长度。</p>
+<p>回过头来看上面那个例子，译文句子的 unigram 只有“the”，它在译文中出现了7次，故 Count(the)=7；在参考句子1中出现2次，参考句子2中出现1次，最大值为2，所以“the”的匹配次数为 $Count_{clip}(the)=min{7,2}=2$ ，因此precision为2/7。</p>
+<p>(3) 但是这样的计算方式仍然存在问题：比如模型生成的句子是“the cat is on”，那么从 n 不论取1、2、3还是4，得分都是1，满分。换言之，由于评价的是precision，所以会倾向于短句子，如果模型只翻译最有把握的片段，那么就可以得到高分，因此要<strong>对短句子进行惩罚</strong>。</p>
+<p>惩罚的方式就是在原先的评价指标值上乘一个惩罚因子（brevity penalty factor）：当模型给出的译文句子 c 的长度 $l_c$ 要比参考句子的长度 $l_s$ 长时，就不进行惩罚，即惩罚因子为1，比如说有三个参考句子的长度分别为12、15、17，模型给出的译文句子长度为12，那么就不进行惩罚，<strong>比较的是各参考句子长度里最接近的那个</strong>；否则就惩罚：</p>
+<p>$$<br>BP = \begin{cases}<br>1, &amp;l_C &gt; l_S \<br>exp(1-\frac{l_S}{l_C}), &amp;l_C \leq l_S<br>\end{cases}<br>$$</p>
+<p>式中，$l_C$表示模型对给定测试集生成的全部句子长度综合，而$l_S$表示与模型生成句子长度最接近的参考句子的长度。</p>
+<p>综合起来，BLEU的评分公式采用的是对数加权平均值（这是因为当n增大时评分会指数级减小），再乘上惩罚因子：</p>
+<p>$$<br>BLEU@N=BP\cdot \exp(\sum_{n=1}^Nw_n\log p_n)<br>$$</p>
+<p>式中的 N 通常取4，权重 $w_n$ 通常取 $\frac{1}{N}$（几何平均）。最终评分在0到1之间，1表示完全与人工翻译一致。</p>
+<p>BLEU的优点是它考虑的粒度是 n-gram 而不是词，考虑了更长的匹配信息；BLEU的缺点是不管什么样的 n-gram 被匹配上了，都会被同等对待。比如说动词匹配上的重要性在大部分情况下应该是大于冠词的。</p>
+<p>(4) 在caption任务中，处理方式和机器翻译是一样的：多张图片就相当于翻译里的多个源语言句子。为了描述清楚还是给一下公式：</p>
+<p>对于测试集的一张图片 $I_i$ ，模型生成的caption记为 $c_i\in C$（ C 是全部 $c_i$ 构成的集合），且将任一 n-gram 记作 $ω<em>k$ ；人工给出的参考caption的集合为 $Si={s</em>{i1},s_{i2},…,s_{im}} \in S$（ S 是全部 Si 构成的集合），$s_{ij}$ 为句子，m 为参考caption的数量（数据集里的一张图片通常会有多个参考caption）。将某个 n-gram $ω_k$ 出现在句子 ci 中的次数记作 $h_k(c_i)$ ，类似地，可定义 $h_k(s_{ij})$ 。</p>
+<p>在整个测试集上，precision值为</p>
+<p>$$<br>p_n(C,S)=\frac{\displaystyle\sum_i\sum_k\min{h_k(c_i),\max_{j\leq m}h_k(s_{ij})}}{\displaystyle\sum_i\sum_kh_k(c_i)}<br>$$</p>
+<p>类似的，惩罚因子的值为</p>
+<p>$$<br>BP(C,S) = \begin{cases}<br>1, &amp;l_C &gt; l_S \<br>exp(1-\frac{l_S}{l_C}), &amp;l_C \leq l_S<br>\end{cases}<br>$$</p>
+<p>所以BLEU@N的值为</p>
+<p>$$<br>BLEU@N(C,S)=BP(C,S)\cdot \exp(\sum_{n=1}^Nw_n\log p_n(C,S))<br>$$</p>
+<h2 id="2-2-ROUGE"><a href="#2-2-ROUGE" class="headerlink" title="2.2 ROUGE"></a>2.2 ROUGE</h2><p>ROUGE主要用于自动摘要评价，是基于召回率计算的，这里参考了<a href="http://blog.csdn.net/lime1991/article/details/42521029" target="_blank" rel="noopener">这篇blog</a>。下面转载一下贴图。</p>
+<p><img src="http://img.blog.csdn.net/20150108103738135?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGltZTE5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="ROUGE-PPT"></p>
+<p><img src="http://img.blog.csdn.net/20150108103701787?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGltZTE5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="ROUGE-PPT"></p>
+<p><img src="http://img.blog.csdn.net/20150108103734593?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGltZTE5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="ROUGE-PPT"></p>
+<p><img src="http://img.blog.csdn.net/20150108103824374?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGltZTE5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="ROUGE-PPT"></p>
+<p><img src="http://img.blog.csdn.net/20150108103842984?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGltZTE5OTE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="ROUGE-PPT1"></p>
+<p>后面的方法就不贴了感兴趣可以自己去看看。</p>
+<h2 id="2-3-Meteor"><a href="#2-3-Meteor" class="headerlink" title="2.3 Meteor"></a>2.3 Meteor</h2><p>Meteor也是来评测机器翻译的，对模型给出的译文与参考译文进行词对齐，计算词汇完全匹配、词干匹配和同义词匹配等各种情况的准确率、召回率和F值。</p>
+<p>首先计算 unigram 情况下的准确率 P 和召回率 R（计算方式与BLEU、ROUGE类似），得到调和均值（F值）：</p>
+<p>$$<br>F=\frac{(\alpha^2+1)P}{R+\alpha P}<br>$$</p>
+<p>如果 $α&gt;1$ 就说明 R 的权重高。</p>
+<p><strong>Meteor的特别之处在于，它不希望生成很“碎”的译文</strong>：比如参考译文是“A B C D”，模型给出的译文是“B A D C”，虽然每个 unigram 都对应上了，但是会受到很严重的惩罚。惩罚因子的计算方式为：</p>
+<p>$$<br>Penalty=\gamma (\frac{chunks}{unigrams_matched})^{\theta}<br>$$</p>
+<p>式中的 chunks 表示匹配上的语块个数，如果模型生成的译文很碎的话，语块个数会非常多；unigrams_matched 表示匹配上的 unigram 个数。所以最终的评分为：</p>
+<p>$$<br>Meteor=(1-Penalty)\cdot F<br>$$</p>
+<p>用于机器翻译评测时，通常取 α=3 、γ=0.5 和 θ=3。</p>
+<h2 id="2-4-CIDEr-Consensus-based-Image-Description-Evaluation"><a href="#2-4-CIDEr-Consensus-based-Image-Description-Evaluation" class="headerlink" title="2.4 CIDEr (Consensus-based Image Description Evaluation)"></a>2.4 CIDEr (Consensus-based Image Description Evaluation)</h2><p>这个指标将<strong>每个句子都看作“文档”</strong>，将其表示成 <strong>tf-idf 向量</strong>的形式，然后计算参考caption与模型生成的caption的<strong>余弦相似度</strong>，作为打分。换句话讲，就是向量空间模型。考虑一张图片 $I_i \in I$（ I 是全部测试集图片的集合）。</p>
+<p>对于一个 n-gram $ω<em>k$ 和参考caption $s</em>{ij}$ ，tf-idf 计算方式为：</p>
+<p>$$<br>g_k(s_{ij})=\frac{h_k(s_{ij})}{\displaystyle\sum_{\omega_l\in\Omega} h_l(s_{ij})}\log\biggl(\frac{|I|}{\displaystyle\sum_{I_p\in I}\min{1,\sum_qh_k(s_{pq})}}\biggr)<br>$$</p>
+<p>式中的 Ω 是全部 n-gram 构成的词表。可以看出 idf 的分母部分代表的是 $ω_k$ 出现于参考caption的图片个数。</p>
+<p>那么，CIDEr的值可以用余弦相似度的平均值来计算：</p>
+<p>$$<br>CIDEr_n(c_i,S_i)=\frac1m\sum_j\frac{\boldsymbol{g^n}(c_i)^{\top}\boldsymbol{g^n}(s_{ij})}{||\boldsymbol{g^n}(c_i)||\cdot ||\boldsymbol{g^n}(s_{ij})||}<br>$$</p>
+<p>类似于BLEU的做法：</p>
+<p>$$<br>CIDEr(c_i,S_i)=\sum_{n=1}^Nw_nCIDEr_n(c_i,S_i)<br>$$</p>
+<p>这个指标的motivation之一是刚才提到的BLEU的一个缺点，就是对所有匹配上的词都同等对待，而实际上有些词应该更加重要。</p>
+<h2 id="2-5-SPICE-Semantic-Propositional-Image-Caption-Evaluation"><a href="#2-5-SPICE-Semantic-Propositional-Image-Caption-Evaluation" class="headerlink" title="2.5 SPICE (Semantic Propositional Image Caption Evaluation)"></a>2.5 SPICE (Semantic Propositional Image Caption Evaluation)</h2><p>这个还没细看，先贴上<a href="https://arxiv.org/pdf/1607.08822.pdf" target="_blank" rel="noopener">论文链接</a></p>
+<h1 id="3-总结"><a href="#3-总结" class="headerlink" title="3 总结"></a>3 总结</h1><p>综上，完成了对Image Caption的基本任务和流程的描述，然后介绍了几种评价指标。一般来讲，在进行Image Caption任务的时候，都在使用encoder-decoder模型(后面论文笔记会说到)，然后现在encoder模型大多使用CNN做，decoder大多使用RNN(LSTM)来做，encoder用来提取特征，decoder用来从提取的特征生成描述，详细可以看<a href="https://arxiv.org/abs/1411.4555v2" target="_blank" rel="noopener">Show and Tell: A Neural Image Caption Generator</a>。也有一些attention based的方法用来提升模型的表现，比如<a href="https://arxiv.org/abs/1502.03044" target="_blank" rel="noopener">Show, Attend and Tell: Neural Image Caption Generation with Visual Attention</a></p>
 
           
         
