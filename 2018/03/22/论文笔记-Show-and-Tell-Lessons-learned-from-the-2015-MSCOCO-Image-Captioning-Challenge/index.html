@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Image Caption," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="这篇论文提出的模型也叫NICv2(Neural Image Caption)，提到这篇文章，就要先贴一下它的原型NIC。 NICv2相对于之前做了一些改进，并取得了2015年COCO比赛的第一名。 这里我们先介绍一下原始的NIC，然后讲讲NICv2的改进。 1 模型结构NIC模型的结构很容易理解：就是encoder-decoder框架。 首先利用CNN（论文中是用当时最好的GoogLeNet）作为">
+<meta name="keywords" content="Image Caption">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文笔记 : Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge">
+<meta property="og:url" content="http://yoursite.com/2018/03/22/论文笔记-Show-and-Tell-Lessons-learned-from-the-2015-MSCOCO-Image-Captioning-Challenge/index.html">
+<meta property="og:site_name" content="盗泉">
+<meta property="og:description" content="这篇论文提出的模型也叫NICv2(Neural Image Caption)，提到这篇文章，就要先贴一下它的原型NIC。 NICv2相对于之前做了一些改进，并取得了2015年COCO比赛的第一名。 这里我们先介绍一下原始的NIC，然后讲讲NICv2的改进。 1 模型结构NIC模型的结构很容易理解：就是encoder-decoder框架。 首先利用CNN（论文中是用当时最好的GoogLeNet）作为">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXgy1fplsikpqyzj30y60ran3k.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXly1fplt1tsqhhj30me0db0v5.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXly1fplt870mzqj31aw0tqqv5.jpg">
+<meta property="og:updated_time" content="2018-03-22T13:07:19.358Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="论文笔记 : Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge">
+<meta name="twitter:description" content="这篇论文提出的模型也叫NICv2(Neural Image Caption)，提到这篇文章，就要先贴一下它的原型NIC。 NICv2相对于之前做了一些改进，并取得了2015年COCO比赛的第一名。 这里我们先介绍一下原始的NIC，然后讲讲NICv2的改进。 1 模型结构NIC模型的结构很容易理解：就是encoder-decoder框架。 首先利用CNN（论文中是用当时最好的GoogLeNet）作为">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/005E0CcXgy1fplsikpqyzj30y60ran3k.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/03/22/论文笔记-Show-and-Tell-Lessons-learned-from-the-2015-MSCOCO-Image-Captioning-Challenge/"/>
+
+
+
+
+
+  <title>论文笔记 : Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge | 盗泉</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">盗泉</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">一个干净明亮的地方</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tag"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/22/论文笔记-Show-and-Tell-Lessons-learned-from-the-2015-MSCOCO-Image-Captioning-Challenge/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Pythonix Huang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/1.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="盗泉">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">论文笔记 : Show and Tell: Lessons learned from the 2015 MSCOCO Image Captioning Challenge</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-22T18:43:51+08:00">
+                2018-03-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>这篇论文提出的模型也叫NICv2(Neural Image Caption)，提到这篇文章，就要先贴一下它的<a href="https://arxiv.org/pdf/1411.4555v2.pdf" target="_blank" rel="noopener">原型NIC</a>。</p>
+<p>NICv2相对于之前做了一些改进，并取得了2015年COCO比赛的第一名。</p>
+<p>这里我们先介绍一下原始的NIC，然后讲讲NICv2的改进。</p>
+<h1 id="1-模型结构"><a href="#1-模型结构" class="headerlink" title="1 模型结构"></a>1 模型结构</h1><p>NIC模型的结构很容易理解：就是encoder-decoder框架。</p>
+<p>首先利用CNN（论文中是用当时最好的GoogLeNet）作为encoder，将 Softmax 之前的那一层固定维数的向量作为图像特征；再使用LSTM作为decoder，其中图像特征仅在一开始输入decoder。模型的训练原理和之前在<a href="http://hrspythonix.github.io/2018/03/21/Image-Caption-初步入门/" target="_blank" rel="noopener">Image caption 初步入门</a>里介绍的一样，使用最大化对数似然来训练，然后在生成测试阶段采用beam search来减小搜索空间。模型结构如下图所示：</p>
+<p><img src="https://ws1.sinaimg.cn/large/005E0CcXgy1fplsikpqyzj30y60ran3k.jpg" alt="NIC"></p>
+<p>值得注意的是，这里和传统的encoder-decoder有些区别，主要在于一般的encoder-decoder都会将特征持续地输入进LSTM中，而这里只在一开始输入，后面就没有输入了。作者在论文中说，如果在每个时刻都输入图像特征，模型会把图像的噪声放大，而且也容易过拟合。对比后面的一些基于attention来做caption的论文，这些论文提出的模型都需要在每个时刻输入。由此来看这一模型是非常简单的。</p>
+<p>稍微总结一下encoder-decoder的优缺点：<br>优点：非常灵活，不限制输入和输出的模态，也不限制两个网络的类型<br>缺点：当输入端是文本时，将变长序列表达为固定维数向量，存在信息损失，并且目前还不能处理太长的文本。</p>
+<h1 id="2-训练细节"><a href="#2-训练细节" class="headerlink" title="2 训练细节"></a>2 训练细节</h1><ol>
+<li>固定学习率且不加动量（momentum）</li>
+<li>词条化后去掉词频小于5的词</li>
+<li>在ImageNet上预训练GoogLeNet，并且在训练caption模型时这部分的参数保持不变</li>
+<li>在大型新闻语料上预训练词向量</li>
+<li>使用dropout和模型ensemble，并权衡模型的容量</li>
+<li>512维词向量</li>
+<li>使用困惑度（perplexity）来指导调参</li>
+</ol>
+<h1 id="3-自动评价与人工评价"><a href="#3-自动评价与人工评价" class="headerlink" title="3 自动评价与人工评价"></a>3 自动评价与人工评价</h1><p>作者在论文中多次强调，需要更好的自动评价计算方式。因为以自动评价指标来评测的话，模型的评测结果在很多时候要比人写的caption的评测结果还要好，但人工评价的结果显示，实际上模型的caption相比于人写的caption还有很大差距。</p>
+<h1 id="4-迁移学习与数据标注的质量"><a href="#4-迁移学习与数据标注的质量" class="headerlink" title="4 迁移学习与数据标注的质量"></a>4 迁移学习与数据标注的质量</h1><p>在Image Caption中，是否可以把在某个数据集下训练的模型迁移到另一数据集？<br>高质量的标注数据和更多的数据可以补偿多少<strong>领域错配问题</strong>？</p>
+<p>首先来看第一个问题，作者指出，在Flickr8k和Flick30k这两个数据集上，如果用Flickr30k来训练，效果会提升4个BLEU，更大量的数据带来了更好的效果，凸显data-driven的价值。但是如果用COCO做训练，尽管数据量五倍于Flickr30k，但由于收集过程不统一，带来了词表的差别以及较大的领域错配，效果下降了10个BLEU。PASCAL数据集没有提供训练集，使用COCO训练的效果要比使用Flickr30k的效果要好。</p>
+<p>然后再看后一个的问题。因为SBU数据集的噪声较大，所以可以看作是“弱标注”的（weak labeling），但是如果使用COCO来训练，效果依旧会下降。</p>
+<h1 id="5-生成的caption是否具备多样性"><a href="#5-生成的caption是否具备多样性" class="headerlink" title="5 生成的caption是否具备多样性"></a>5 生成的caption是否具备多样性</h1><p>作者探讨了模型生成的描述是否有新颖性，是否同时具备多样性和高质量。</p>
+<p><img src="https://ws1.sinaimg.cn/large/005E0CcXly1fplt1tsqhhj30me0db0v5.jpg" alt="example"></p>
+<p>首先来看多样性（diversity）。作者挑了测试集里的三个图片的caption，每张图片都有模型生成的3-best描述（加粗的是没在训练集中出现过的），可以看出这些描述可以展现图像的不同方面，因此作者认为该模型生成的caption具备多样性。再来看质量。如果只考虑模型生成的最佳候选caption，那么它们中的80%在训练集中出现过；如果考虑top15，则有一半是完全新的描述，但仍然具备相似的BLEU分，因此作者认为该模型生成的caption兼具了多样性和高质量。</p>
+<h1 id="6-NIC模型的改进——NICv2"><a href="#6-NIC模型的改进——NICv2" class="headerlink" title="6 NIC模型的改进——NICv2"></a>6 NIC模型的改进——NICv2</h1><p>作者给出了一些使他们成为2015COCO比赛第一名的几点改进。</p>
+<p>（1）Batch Normalization</p>
+<p>在作为encoder的GoogLeNet中引入了Batch Normalization</p>
+<p>（2）encoder端的fine tune</p>
+<p>在之前的模型中，encoder端的CNN迁移过来后不参与caption模型的训练，其参数值保持不变。而在新模型中则对其进行了fine tune，具体是先固定encoder的参数，训练500k步decoder，然后encoder和decoder联合训练100k步。作者强调，CNN不能从一起从头开始就联合训练，必须在LSTM的表现足够良好的情况下再联合训练，防止迁移过来的CNN被带偏。</p>
+<p>CNN的fine tune带来的效果是，模型生成出来的一些句子可以描述颜色了。作者认为，在ImageNet预训练的过程中，抛弃了颜色这样的和分类无关的特征。</p>
+<p>（3）使用Scheduled Sampling训练RNN</p>
+<p>我们知道Image Caption是一项生成变长序列的任务，训练时，对于输入 I 和目标序列 S 构成的样本 (I, S) ，目标是最大化似然函数 P(S|I) ，进而训练出来模型的参数。似然函数被拆解成条件概率的连乘形式，在每个词的条件概率求解过程中，RNN接受的输入信息包括上一时刻的隐状态、encoder的编码向量以及上一时刻的词。</p>
+<p>这就有一个问题，训练时“上一时刻的词”是被指定为目标序列 S 中的词的，也就是说它是“正确的”；而在测试时，“正确的”上一时刻目标词是无法得知的，取而代之使用的是由模型生成的词（由Softmax计算出词表中概率最大的那个词，这会导致在训练时去弥补真实词和softmax生成词之间的loss），训练和测试就产生了不统一（discrepancy）。如果测试过程中的某个时刻生成了错误的词，那么这个错误会被快速放大。</p>
+<p>作者在RNN的训练过程中采用了Scheduled Sampling，即在训练RNN时随机地使用模型真实输出来作为下一个时刻的输入，而不是原先那样只会使用期望的生成的目标词来作为下一时刻的输入。作者认为，这种方式可以强迫模型在训练过程中“学会”如何处理错误。</p>
+<p>（4）模型ensemble</p>
+<p>变更一些训练条件参数，从而训练出多个模型。作者训练了5个Scheduled Sampling模型和10个fine tune CNN模型。</p>
+<p>（5）减小beam search的候选结果个数，即k的值</p>
+<p>原始NIC模型中，作者只取了k=1和k=20两个值。在后续研究过程中，发现k=3时模型表现最佳。理论上讲，k越大应该越好，但实际上是较小的k取得了最好的结果，这说明模型可能出现了过拟合；同时作者发现减少k适当地可以提升Diversity（模型生成的caption出现在训练集的比例下降了20%），所以认为模型是过拟合了。从这个角度来看，减少k可以视作一种正则化。</p>
+<p>最后贴一下效果图<br><img src="https://ws1.sinaimg.cn/large/005E0CcXly1fplt870mzqj31aw0tqqv5.jpg" alt="ex"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>请我吃辣条吧~</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/WechatPay.png" alt="Pythonix Huang 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/Alipay.png" alt="Pythonix Huang 支付宝"/>
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Image-Caption/" rel="tag"># Image Caption</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/21/Image-Caption-初步入门/" rel="next" title="Image Caption 初步入门">
+                <i class="fa fa-chevron-left"></i> Image Caption 初步入门
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/1.png"
+                alt="Pythonix Huang" />
+            
+              <p class="site-author-name" itemprop="name">Pythonix Huang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/HrsPythonix" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-模型结构"><span class="nav-text">1 模型结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-训练细节"><span class="nav-text">2 训练细节</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-自动评价与人工评价"><span class="nav-text">3 自动评价与人工评价</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-迁移学习与数据标注的质量"><span class="nav-text">4 迁移学习与数据标注的质量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-生成的caption是否具备多样性"><span class="nav-text">5 生成的caption是否具备多样性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-NIC模型的改进——NICv2"><span class="nav-text">6 NIC模型的改进——NICv2</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Pythonix Huang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  <script src="//cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
+</body>
+</html>
