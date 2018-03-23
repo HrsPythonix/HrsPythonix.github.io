@@ -100,7 +100,7 @@
 <meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmzyazbuwj30uw0joh4j.jpg">
 <meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmzvxfy7jj30sb0lkn4w.jpg">
 <meta property="og:image" content="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmzwg0ejrj30tb0mk15z.jpg">
-<meta property="og:updated_time" content="2018-03-23T11:56:40.672Z">
+<meta property="og:updated_time" content="2018-03-23T12:30:18.781Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="论文笔记 : Show, Attend and Tell: Neural Image Caption Generation with Visual Attention">
 <meta name="twitter:description" content="首先先贴一下论文链接，在上一篇笔记中介绍了NIC，它使用的是encoder-decoder框架，使用CNN作为encoder提取特征，将softmax的前一层的vector作为encoder端的输出，然后将其输入进使用LSTM的decoder中进行解码并生成句子。总体来讲模型还是很直观的，而且相对于一般的encoder-decoder框架，只在一开始输入了图像特征，不过它的训练过程应用了很多技巧，">
@@ -339,7 +339,7 @@
 <h1 id="2-模型结构"><a href="#2-模型结构" class="headerlink" title="2 模型结构"></a>2 模型结构</h1><p>本文的caption模型中，在解码的每个时刻都会接收由attention机制所计算出的编码向量。作者首先指出，由于此前的工作使用的是CNN在Softmax之前的那一层vector表示作为图像特征，这就有一个缺点，就是会丢失能够使caption变得更丰富的一些信息（例如NICv2那篇论文提到在分类数据集上预训练的CNN抛弃了诸如颜色等对分类没有太大帮助的特征），因此这里使用更low-level的表示。随后提出了使用的两种attention：“soft” deterministic attention 和 “hard” stochastic attention，它们通过$\phi$函数来控制。模型的大致结构图如下：</p>
 <p><img src="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmuo0hhvwj30xt0iu434.jpg" alt="model-image"></p>
 <h2 id="2-1-encoder-part"><a href="#2-1-encoder-part" class="headerlink" title="2.1 encoder part"></a>2.1 encoder part</h2><p>在encoder阶段，照例还是使用CNN来进行提取，具体来讲是提取L个D维的vector，每个vector都对应着图像的一个区域</p>
-<p>$$<br>a={ \textbf{a}_1,…,\textbf{a}_L },\quad\textbf{a}_i\in\mathbb{R}^D<br>$$</p>
+<p>$$<br>a=\{ \textbf{a}_1,…,\textbf{a}_L \},\quad\textbf{a}_i\in\mathbb{R}^D<br>$$</p>
 <p>我们知道，此前的NIC使用Softmax层之前的那一层vector作为图像特征，这可能会丢失一些对于分类无关紧要的特征(例如作者提到的颜色)，而本文的模型是使用来自于 low-level 的卷积层的vector作为图像特征，这可以保留部分特征并且使得decoder可以通过选择所有特征向量的子集来选择性地聚焦于图像的某些部分。</p>
 <h2 id="2-2-decoder-part"><a href="#2-2-decoder-part" class="headerlink" title="2.2 decoder part"></a>2.2 decoder part</h2><p>和之前的套路一样，decoder使用RNN(LSTM)来生成词序列。</p>
 <p>首先先简略的回顾一下LSTM模型，参考<a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs/" target="_blank" rel="noopener">这里</a>：</p>
@@ -368,11 +368,11 @@
 <p><img src="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmvr8e5ebj31eq0foq4r.jpg" alt="LSTM8"></p>
 <p>例如，因为模型刚刚看到了一个代词，可能下一个输出就要输出与一个动词相关的信息，可能要输出是否代词是单数还是复数，这样我们就能知道动词是否要进行词形变化。</p>
 <h3 id="2-2-2-decoder模型解释"><a href="#2-2-2-decoder模型解释" class="headerlink" title="2.2.2 decoder模型解释"></a>2.2.2 decoder模型解释</h3><p>模型生成的一句caption被表示为各个词的one-hot编码所构成的集合：</p>
-<p>$$<br>y={ \textbf{y}_1,…,\textbf{y}_C },\quad\textbf{y}_i\in\mathbb{R}^K<br>$$</p>
+<p>$$<br>y=\{ \textbf{y}_1,…,\textbf{y}_C \},\quad\textbf{y}_i\in\mathbb{R}^K<br>$$</p>
 <p>其中 K 是词表大小，C 是句子长度。</p>
 <p>对应的LSTM的数学模型如下：</p>
-<p>$$<br>\begin{pmatrix}\textbf{i}_t \\textbf{f}_t \\textbf{o}_t \\textbf{g}<em>t \\end{pmatrix}=\begin{pmatrix}\sigma\ \sigma\ \sigma\ \tanh \end{pmatrix}T</em>{D+m+n, n} \ \begin{pmatrix}E\textbf{y}<em>{t-1}\ \textbf{h}</em>{t-1}\ \hat{\textbf z}_t \end{pmatrix}<br>$$</p>
-<p>$$<br>\textbf{c}_t=\textbf{f}<em>t \odot \textbf{c}</em>{t-1} + \textbf{i}_t \odot \textbf{g}_t<br>$$</p>
+<p>$$<br>\begin{pmatrix}\textbf{i}_t \\\textbf{f}_t \\\textbf{o}_t \\\textbf{g}_t \\\end{pmatrix}=\begin{pmatrix}\sigma\\\sigma\\\sigma\\\tanh \end{pmatrix}T_{D+m+n, n}  \begin{pmatrix}E\textbf{y}_{t-1}\\\textbf{h}_{t-1}\\\hat{\textbf z}_t \end{pmatrix}<br>$$</p>
+<p>$$<br>\textbf{c}_t=\textbf{f}_t \odot \textbf{c}_{t-1} + \textbf{i}_t \odot \textbf{g}_t<br>$$</p>
 <p>$$<br>\textbf{h}_t = \textbf{o}_t \odot \tanh(\textbf{c}_t)<br>$$</p>
 <p>第一个式子实际上是四个式子，分别得到输入门、遗忘门、输出门和被输入门控制的候选向量。其中，三个门控由sigmoid激活，得到的是元素值皆在 0 到 1 之间的向量，可以将门控的值视作保留概率(保留量)；候选向量由tanh激活，得到的是元素值皆在 －1 到 1 之间。$T_{s,t}$ 代表的是从 $R^s$ 到 $R^t$ 的仿射变换。</p>
 <p>最右边括号里的三个量是四个式子共有的三个输入量：$Ey_{t-1}$ 是look-up得到词 $y_{t-1}$ 的 m 维词向量，这里暂停一下解释一下下Word Embedding，简单来讲就是为了方便把每个单词变成一个向量(通常降维了)，如下图，变换的矩阵叫做embedding matrix就是上面式子里的$E$，注意$E \in R^{m \times K}$，这里的look-up类似于 tensorflow里的tf.nn.embedding_lookup()。</p>
@@ -389,34 +389,34 @@
 <p>我们刚刚知道了，通过Attention机制计算出的 $\hat z_t$ 被称为 context vector，是捕捉了特定区域视觉信息的上下文向量。</p>
 <p>而Attention要实现的是模型在解码的不同时刻可以关注不同的图像区域，进而可以生成更合理的词。那么，在Attention中就有两个比较关键的量，一个和时刻 t 相关，对应于解码时刻；另一个是输入序列的区域 $\text{a}_i$，对应图像的一个区域。</p>
 <p>那么如何实现这一机制呢？</p>
-<p>实现这种机制的方式就是在时刻 t ，为输入序列的各个区域 i 计算出一个权重 $\alpha_{ti}$ 。因为输入序列的各个区域的权重的加和为一，所以使用Softmax来实现。至于Softmax需要输入的信息，则需要包含两个方面：一个是被计算的区域 $\text{a}<em>i$，另一个就是上一时刻的信息 $h</em>{t-1}$ ：</p>
+<p>实现这种机制的方式就是在时刻 t ，为输入序列的各个区域 i 计算出一个权重 $\alpha_{ti}$ 。因为输入序列的各个区域的权重的加和为一，所以使用Softmax来实现。至于Softmax需要输入的信息，则需要包含两个方面：一个是被计算的区域 $\text{a}_i$，另一个就是上一时刻的信息 $h_{t-1}$ ：</p>
 <p>$$<br>e_{ti}=f_{\text{att}}(\textbf a_i,\textbf h_{t-1})<br>$$</p>
 <p>$$<br>\alpha_{ti}=\frac{\exp(e_{ti})}{\sum_{k=1}^L\exp(e_{tk})}<br>$$</p>
 <p>其中$f_{\text{att}}$是结合计算区域 i 和时刻 t 这两个信息的打分函数。论文中使用多层感知机来实现。</p>
 <p>得到了权重之后就是计算$\hat{\textbf z}_t$了：</p>
-<p>$$<br>\hat{\textbf z}_t=\phi({\textbf a_i},{\alpha_{ti}})<br>$$</p>
+<p>$$<br>\hat{\textbf z}_t=\phi(\{\textbf a_i\},\{\alpha_{ti}\})<br>$$</p>
 <p>这个函数 $\phi $ 就是文中提出的两种attention机制，对应于将权重施加到图像区域到两种不同的策略。下面来分别介绍这两个机制。</p>
 <h4 id="2-2-3-1-Stochastic-“Hard”-Attention"><a href="#2-2-3-1-Stochastic-“Hard”-Attention" class="headerlink" title="2.2.3.1 Stochastic “Hard” Attention"></a>2.2.3.1 Stochastic “Hard” Attention</h4><p>首先介绍文中提出的第一种Attention机制，Hard Attention。</p>
-<p>在 Hard Attention 机制中，权重 $\alpha_{ti}$ 的意义是是图像区域 $\text{a}<em>i$ 在时刻 t 被选中作为输入decoder的信息的概率，整个图像中有且仅有一个区域会被选中。为此，引入变量 $s</em>{t,i}$ ，当区域 i 被选中时取值为 1 ，否则为 0 。那么就有：</p>
-<p>$$<br>\hat{\textbf z}<em>t=\sum</em>{i}s_{t,i}\textbf a_i<br>$$</p>
-<p>本文将 $s_t$ 视作隐变量，它是参数是 ${\alpha_i}$ 的多元贝努利分布。</p>
+<p>在 Hard Attention 机制中，权重 $\alpha_{ti}$ 的意义是是图像区域 $\text{a}_i$ 在时刻 t 被选中作为输入decoder的信息的概率，整个图像中有且仅有一个区域会被选中。为此，引入变量 $s_{t,i}$ ，当区域 i 被选中时取值为 1 ，否则为 0 。那么就有：</p>
+<p>$$<br>\hat{\textbf z}_t=\sum_{i}s_{t,i}\textbf a_i<br>$$</p>
+<p>本文将 $s_t$ 视作隐变量，它是参数是 $\{\alpha_i\}$ 的多元贝努利分布。</p>
 <p>$$<br>p(s_{t,i}=1|s_{j&lt;t},\textbf a)=\alpha_{t,i}<br>$$</p>
 <p>为了应用极大似然估计来进行训练，就需要把隐变量边缘化，然后用marginal log-likelihood的下界（variational lower bound）来作为目标函数$L_s$，这就是EM算法的思路：</p>
-<p>$$<br>\begin{aligned}\log p(\textbf y|\textbf a)&amp;=\log\sum_sp(s|\textbf a)p(\textbf y|s,\textbf a)\&amp;\geq \sum_sp(s|\textbf a)\log p(\textbf y|s,\textbf a)\end{aligned}<br>$$</p>
+<p>$$<br>\begin{aligned}\log p(\textbf y|\textbf a)&amp;=\log\sum_sp(s|\textbf a)p(\textbf y|s,\textbf a)\\&amp;\geq \sum_sp(s|\textbf a)\log p(\textbf y|s,\textbf a)\end{aligned}<br>$$</p>
 <p>$$<br>L_s=\sum_sp(s|\textbf a)\log p(\textbf y|s,\textbf a)<br>$$</p>
 <p>其中 y 是为图像 $\text{a}$ 生成的一句caption（由一系列one-hot编码构成的词序列）。不等号那里是Jensen不等式。</p>
 <p>接下来对目标函数求梯度：</p>
 <p>$$<br>{\partial L_s \over \partial W} = \sum_s p(s | \mathbf{a}) \left[ {\partial \log p(\mathbf{y} | s, \mathbf{a}) \over \partial W} + \log p(\mathbf{y} | s, \mathbf{a}) {\partial \log p(s | \mathbf{a}) \over \partial W} \right]<br>$$</p>
 <p>用 N 次蒙特卡洛采样（可以简单理解为抛硬币）来近似：</p>
-<p>$$<br>\tilde{s}_t \sim \mathrm{Multinoulli}_L ({ \alpha_i })<br>$$</p>
+<p>$$<br>\tilde{s}_t \sim \mathrm{Multinoulli}_L (\{ \alpha_i \})<br>$$</p>
 <p>$$<br>{\partial L_s \over \partial W} \approx {1 \over N} \sum_{n=1}^N p( \tilde{s}^n | \mathbf{a}) \left[ {\partial \log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) \over \partial W} + \log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) {\partial \log p(\tilde{s}^n | \mathbf{a}) \over \partial W} \right]<br>$$</p>
 <p>另外，在蒙特卡洛方法估计梯度时，可以使用滑动平均来减小梯度的方差。在第 k 个mini-batch时，滑动平均被估计为先前对数似然伴随指数衰减的累积和。</p>
 <p>$$<br>b_k=0.9b_{k-1}+0.1\log p(\textbf y|\tilde{s}_k,\textbf a)<br>$$</p>
 <p>为进一步减小方差，引入多元贝努利分布的熵 $\mathbb H[s]$ ；而且对于一张给定图片，0.5的概率将 $\tilde{s}$ 设置为它的期望值 $\alpha$ 。这两个技术提升了随机算法的鲁棒性。最终的学习规则为：</p>
-<p>$$<br>\begin{aligned}{\partial L_s \over \partial W} \approx {1 \over N} \sum_{n=1}^N p(\tilde{s}^n | \mathbf{a}) &amp;[ {\partial \log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) \over \partial W}\&amp; + \lambda_r (\log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) - b) {\partial \log p(\tilde{s}^n | \mathbf{a}) \over \partial W} \&amp;+ \lambda_e {\partial \mathbb H[\tilde{s}^n] \over \partial W} ]\end{aligned}<br>$$</p>
+<p>$$<br>\begin{aligned}{\partial L_s \over \partial W} \approx {1 \over N} \sum_{n=1}^N p(\tilde{s}^n | \mathbf{a}) &amp;[ {\partial \log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) \over \partial W}\\&amp; + \lambda_r (\log p(\mathbf{y} | \tilde{s}^n, \mathbf{a}) - b) {\partial \log p(\tilde{s}^n | \mathbf{a}) \over \partial W} \\&amp;+ \lambda_e {\partial \mathbb H[\tilde{s}^n] \over \partial W} ]\end{aligned}<br>$$</p>
 <p>其中的两个系数$\lambda_r \lambda_e$是超参数。实际上，这个规则等价于强化学习规则：attention选择的一系列action的reward是与在采样attention轨迹下目标句子的对数似然成比例的。</p>
 <h4 id="2-2-3-2-Deterministic-“Soft”-Attention"><a href="#2-2-3-2-Deterministic-“Soft”-Attention" class="headerlink" title="2.2.3.2 Deterministic “Soft” Attention"></a>2.2.3.2 Deterministic “Soft” Attention</h4><p>在 soft attention 机制中，权重 $\alpha_{ti}$ 所扮演的角色是图像区域 $\text{a}_i$ 在时刻 t 的输入decoder的信息中的所占的比例。既然这样，就将各区域 ai 与对应的权重 αt,i 做加权求和就可以得到 $\hat{z}_t$：</p>
-<p>$$<br>\mathbb E_{p(s_t|a)}[\hat{\textbf z}<em>t]=\sum</em>{i=1}^L\alpha_{t,i}\textbf a_i<br>$$</p>
+<p>$$<br>\mathbb E_{p(s_t|a)}[\hat{\textbf z}_t]=\sum_{i=1}^L\alpha_{t,i}\textbf a_i<br>$$</p>
 <p>整个模型光滑、可微，利用反向传播来进行end-to-end的训练。</p>
 <p>论文里还介绍了更多细节，比如分析了解码过程的一些情况；强迫使图像的每个区域在整个解码过程中的权重之和都相等（这种做法在目标函数中体现为一个惩罚项），来使图像的各个区域都对生成caption起到贡献；增加一个跟时间有关的维度因子可以让模型的注意力集中在图像的目标上。</p>
 <p><img src="https://ws1.sinaimg.cn/large/005E0CcXgy1fpmzyazbuwj30uw0joh4j.jpg" alt="compare"></p>
